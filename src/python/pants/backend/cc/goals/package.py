@@ -9,6 +9,7 @@ from pathlib import PurePath
 from typing import Iterable
 
 from pants.backend.cc.target_types import (
+    CC_SOURCE_FILE_EXTENSIONS,
     CCContrivedField,
     CCDependenciesField,
     CCFieldSet,
@@ -62,11 +63,20 @@ async def _transitive_field_sets(address: Address) -> list[CCFieldSet]:
 @rule_helper
 async def _compile_sources(cc_field_sets: Iterable[CCFieldSet]) -> Digest:
     """Compile all incoming files and merge their digests."""
-
+    def _source_file_extension(field_set: CCFieldSet) -> str:
+        """Get the source file extension for the given field set."""
+        path = PurePath(field_set.sources.value)
+        return path.suffix
+    
+    source_file_field_sets = [
+        field_set
+        for field_set in cc_field_sets
+        if _source_file_extension(field_set) in CC_SOURCE_FILE_EXTENSIONS
+    ]
     # TODO: Should this be Fallible, or just Compiled?
     compiled_objects = await MultiGet(
         Get(FallibleCompiledCCObject, CompileCCSourceRequest(field_set))
-        for field_set in cc_field_sets
+        for field_set in source_file_field_sets
     )
 
     # Merge all individual compiled objects into a single digest
