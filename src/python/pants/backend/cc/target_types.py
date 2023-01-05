@@ -5,20 +5,24 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from pathlib import PurePath
 from typing import Iterable
 
 from pants.engine.rules import Rule, collect_rules
 from pants.engine.target import (
     COMMON_TARGET_FIELDS,
+    AsyncFieldMixin,
     Dependencies,
     FieldSet,
     MultipleSourcesField,
     SingleSourceField,
+    StringField,
     Target,
     TargetFilesGenerator,
     generate_multiple_sources_field_help_message,
 )
 from pants.engine.unions import UnionRule
+from pants.util.strutil import softwrap
 
 # Using the extensions referenced in C++ Core Guidelines FAQ
 # https://isocpp.org/wiki/faq/coding-standards#hdr-file-ext
@@ -40,6 +44,31 @@ class CCLanguage(Enum):
     CXX = "cxx"
 
 
+class CCLanguageField(StringField, AsyncFieldMixin):
+    alias = "language"
+    default = None
+    valid_choices = CCLanguage
+    help = softwrap(
+        """
+        A field to indicate what programming language the source is written in.
+
+        The default selection is `None`, in which case we attempt to determine the correct compiler based on file extension.
+        Alternatively, `c` or `cxx` may be specified to force compilation with the specified toolchains/flags.
+        """
+    )
+
+    def normalized_value(self) -> CCLanguage:
+        """Get the value after applying the default and validating that the key is recognized."""
+        if self.value is None:
+            filename = self.address.filename
+            return (
+                CCLanguage.CXX
+                if PurePath(filename).suffix in CXX_SOURCE_FILE_EXTENSIONS
+                else CCLanguage.C
+            )
+        return CCLanguage(self.value)
+
+
 class CCDependenciesField(Dependencies):
     pass
 
@@ -57,6 +86,7 @@ class CCFieldSet(FieldSet):
     required_fields = (CCSourceField,)
 
     sources: CCSourceField
+    language: CCLanguageField
 
 
 @dataclass(frozen=True)
