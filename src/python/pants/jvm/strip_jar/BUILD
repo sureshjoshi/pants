@@ -6,16 +6,16 @@ resources(name="java_resources", sources=["*.java", "strip_jar.lock"])
 python_tests(name="tests", timeout=240)
 
 # Targets for developing on the strip jar outside of engine rules.
-java_sources(
-    name="strip_jar_java",
-    resolve="strip_jar_dev",
-)
+#java_sources(
+#    name="strip_jar_java",
+#    resolve="strip_jar_dev",
+#)
 
-jvm_artifact(
-    name="reproducible-builds-jvm-stripper",
-    group="io.github.zlika",
-    artifact="reproducible-build-maven-plugin",
-    version="0.16",
-    resolve="strip_jar_dev",
-    packages=["io.github.zlika.reproducible.**"],
-)
+# jvm_artifact(
+#     name="reproducible-builds-jvm-stripper",
+#     group="io.github.zlika",
+#     artifact="reproducible-build-maven-plugin",
+#     version="0.16",
+#     resolve="strip_jar_dev",
+#     packages=["io.github.zlika.reproducible.**"],
+# )

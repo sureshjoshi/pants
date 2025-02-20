@@ -6,7 +6,7 @@ resources(name="java_resources", sources=["*.java", "java_parser.lock"])
 python_tests(name="tests", timeout=240)
 
 # Targets for developing on the Java parser outside of engine rules.
-java_sources(
-    name="java_parser",
-    resolve="java_parser_dev",
-)
+#java_sources(
+#    name="java_parser",
+#    resolve="java_parser_dev",
+#)
