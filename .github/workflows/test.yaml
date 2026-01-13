@@ -17,7 +17,7 @@ jobs:
     env:
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Bootstrap Pants, test and lint Rust (Linux-x86_64)
     needs:
     - classify_changes
@@ -134,7 +134,7 @@ jobs:
     env:
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Bootstrap Pants, test Rust (macOS14-ARM64)
     needs:
     - classify_changes
@@ -421,7 +421,6 @@ jobs:
         path: .pants.d/workdir/*.log
     timeout-minutes: 90
   check_release_notes:
-    if: github.repository_owner == 'pantsbuild'
     name: Ensure PR has release notes
     needs:
     - classify_changes
@@ -450,7 +449,6 @@ jobs:
           Feel free to ask a maintainer for help if you are not sure what is appropriate!
         mode: minimum
   classify_changes:
-    if: github.repository_owner == 'pantsbuild'
     name: Classify changes
     outputs:
       ci_config: ${{ steps.classify.outputs.ci_config }}
@@ -511,7 +509,7 @@ jobs:
         fail-on-error: false
         parallel-finished: true
   lint_python:
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Lint Python and Shell
     needs:
     - bootstrap_pants_linux_x86_64
@@ -633,7 +631,7 @@ jobs:
   test_python_linux_x86_64_0:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 0/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -759,7 +757,7 @@ jobs:
   test_python_linux_x86_64_1:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 1/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -885,7 +883,7 @@ jobs:
   test_python_linux_x86_64_2:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 2/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1011,7 +1009,7 @@ jobs:
   test_python_linux_x86_64_3:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 3/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1137,7 +1135,7 @@ jobs:
   test_python_linux_x86_64_4:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 4/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1263,7 +1261,7 @@ jobs:
   test_python_linux_x86_64_5:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 5/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1389,7 +1387,7 @@ jobs:
   test_python_linux_x86_64_6:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 6/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1515,7 +1513,7 @@ jobs:
   test_python_linux_x86_64_7:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 7/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1641,7 +1639,7 @@ jobs:
   test_python_linux_x86_64_8:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 8/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1767,7 +1765,7 @@ jobs:
   test_python_linux_x86_64_9:
     env:
       PANTS_PROCESS_EXECUTION_LOCAL_PARALLELISM: '1'
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (Linux-x86_64) Shard 9/10
     needs:
     - bootstrap_pants_linux_x86_64
@@ -1894,7 +1892,7 @@ jobs:
     env:
       ARCHFLAGS: -arch arm64
       _PYTHON_HOST_PLATFORM: macosx-14.0-arm64
-    if: (github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Test Python (macOS14-ARM64)
     needs:
     - bootstrap_pants_macos14_arm64

@@ -388,7 +388,6 @@ jobs:
         RELEASE_VERSION="${RELEASE_TAG#release_}"
         gh workflow run sync_docs.yml -F "version=$RELEASE_VERSION" -F "reviewer=${{ github.actor }}" -R pantsbuild/pantsbuild.org
   release_info:
-    if: github.repository_owner == 'pantsbuild'
     name: Create draft release and output info
     outputs:
       build-ref: ${{ steps.get_info.outputs.build-ref }}
