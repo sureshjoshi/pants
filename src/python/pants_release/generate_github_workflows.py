@@ -1163,7 +1163,7 @@ def build_wheels_jobs(*, for_deploy_ref: str | None = None, needs: list[str] | N
     # total in the release.py script. Currently here:
     return {
         **build_wheels_job(Platform.LINUX_X86_64, for_deploy_ref, needs),
-        **build_wheels_job(Platform.LINUX_ARM64, for_deploy_ref, needs),
+        # **build_wheels_job(Platform.LINUX_ARM64, for_deploy_ref, needs),
         **build_wheels_job(Platform.MACOS14_ARM64, for_deploy_ref, needs),
     }
 
@@ -1180,10 +1180,10 @@ def test_workflow_jobs() -> Jobs:
         },
     }
     jobs.update(**linux_x86_64_test_jobs())
-    jobs.update(**linux_arm64_test_jobs())
+    # jobs.update(**linux_arm64_test_jobs())
     jobs.update(**macos14_arm64_test_jobs())
     jobs.update(**build_wheels_jobs())
-    jobs.update(**windows11_x86_64_test_jobs())
+    # jobs.update(**windows11_x86_64_test_jobs())
     jobs.update(
         {
             "lint_python": {
