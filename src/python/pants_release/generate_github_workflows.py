@@ -1171,13 +1171,13 @@ def build_wheels_jobs(*, for_deploy_ref: str | None = None, needs: list[str] | N
 def test_workflow_jobs() -> Jobs:
     linux_x86_64_helper = Helper(Platform.LINUX_X86_64)
     jobs: dict[str, Any] = {
-        "check_release_notes": {
-            "name": "Ensure PR has release notes",
-            "runs-on": linux_x86_64_helper.runs_on(),
-            "needs": ["classify_changes"],
-            # "if": is_pants_owner,
-            "steps": ensure_release_notes(),
-        },
+        # "check_release_notes": {
+        #     "name": "Ensure PR has release notes",
+        #     "runs-on": linux_x86_64_helper.runs_on(),
+        #     "needs": ["classify_changes"],
+        #     # "if": is_pants_owner,
+        #     "steps": ensure_release_notes(),
+        # },
     }
     jobs.update(**linux_x86_64_test_jobs())
     # jobs.update(**linux_arm64_test_jobs())

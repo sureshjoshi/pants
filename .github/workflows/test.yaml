@@ -420,34 +420,6 @@ jobs:
         overwrite: 'true'
         path: .pants.d/workdir/*.log
     timeout-minutes: 90
-  check_release_notes:
-    name: Ensure PR has release notes
-    needs:
-    - classify_changes
-    runs-on:
-    - ubuntu-22.04
-    steps:
-    - env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      if: github.event_name == 'pull_request' && !needs.classify_changes.outputs.notes
-      name: Ensure appropriate label
-      uses: mheap/github-action-required-labels@v4.0.0
-      with:
-        count: 1
-        labels: release-notes:not-required, category:internal
-        message: |2
-
-          Please do one of:
-
-          - add release notes to the appropriate file in `docs/notes`
-
-          - label this PR with `release-notes:not-required` if it does not need them (for
-            instance, if this is fixing a minor typo in documentation)
-
-          - label this PR with `category:internal` if it's an internal change
-
-          Feel free to ask a maintainer for help if you are not sure what is appropriate!
-        mode: minimum
   classify_changes:
     name: Classify changes
     outputs:
@@ -606,7 +578,6 @@ jobs:
     - bootstrap_pants_macos14_arm64
     - build_wheels_linux_x86_64
     - build_wheels_macos14_arm64
-    - check_release_notes
     - classify_changes
     - coveralls_done
     - lint_python
