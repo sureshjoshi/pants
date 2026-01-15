@@ -246,7 +246,7 @@ jobs:
       MODE: debug
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: ((github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.release == 'true' || needs.classify_changes.outputs.ci_config == 'true')) && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Build wheels (Linux-x86_64)
     needs:
     - classify_changes
@@ -329,7 +329,7 @@ jobs:
       MODE: debug
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: ((github.repository_owner == 'pantsbuild') && (needs.classify_changes.outputs.release == 'true' || needs.classify_changes.outputs.ci_config == 'true')) && (needs.classify_changes.outputs.no_code != 'true')
+    if: needs.classify_changes.outputs.no_code != 'true'
     name: Build wheels (macOS14-ARM64)
     needs:
     - classify_changes
@@ -694,18 +694,6 @@ jobs:
       run: |
         ./pants test --shard=0/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -819,18 +807,6 @@ jobs:
       name: Run Python test shard 1/10
       run: |
         ./pants test --shard=1/10 ::
-    - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
     - continue-on-error: true
       if: always()
       name: Upload pants.log
@@ -946,18 +922,6 @@ jobs:
       run: |
         ./pants test --shard=2/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -1071,18 +1035,6 @@ jobs:
       name: Run Python test shard 3/10
       run: |
         ./pants test --shard=3/10 ::
-    - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
     - continue-on-error: true
       if: always()
       name: Upload pants.log
@@ -1198,18 +1150,6 @@ jobs:
       run: |
         ./pants test --shard=4/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -1323,18 +1263,6 @@ jobs:
       name: Run Python test shard 5/10
       run: |
         ./pants test --shard=5/10 ::
-    - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
     - continue-on-error: true
       if: always()
       name: Upload pants.log
@@ -1450,18 +1378,6 @@ jobs:
       run: |
         ./pants test --shard=6/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -1575,18 +1491,6 @@ jobs:
       name: Run Python test shard 7/10
       run: |
         ./pants test --shard=7/10 ::
-    - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
     - continue-on-error: true
       if: always()
       name: Upload pants.log
@@ -1702,18 +1606,6 @@ jobs:
       run: |
         ./pants test --shard=8/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -1828,18 +1720,6 @@ jobs:
       run: |
         ./pants test --shard=9/10 ::
     - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/Linux-x86_64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
-    - continue-on-error: true
       if: always()
       name: Upload pants.log
       uses: actions/upload-artifact@v6
@@ -1920,18 +1800,6 @@ jobs:
       name: Run Python tests
       run: |
         ./pants --tag=+platform_specific_behavior test :: -- -m platform_specific_behavior
-    - continue-on-error: true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY || '--DISABLED--' }}
-        PANTS_SHOALSOFT_OPENTELEMETRY_ENABLED: ${{ vars.OPENTELEMETRY_ENABLED || 'False' }}
-      if: always()
-      name: Upload test reports
-      run: |
-        export S3_DST=s3://logs.pantsbuild.org/test/reports/macOS14-ARM64/$(git show --no-patch --format=%cd --date=format:%Y-%m-%d)/${GITHUB_REF_NAME//\//_}/${GITHUB_RUN_ID}/${GITHUB_RUN_ATTEMPT}/${GITHUB_JOB}
-        echo "Uploading test reports to ${S3_DST}"
-        ./pants run ./src/python/pants_release/copy_to_s3.py                   --                   --src-prefix=dist/test/reports                   --dst-prefix=${S3_DST}                   --path=""
     - continue-on-error: true
       if: always()
       name: Upload pants.log

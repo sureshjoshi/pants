@@ -831,7 +831,7 @@ def test_jobs(
                 "name": human_readable_step_name,
                 "run": pants_args_str,
             },
-            helper.upload_test_reports(),
+            # helper.upload_test_reports(),
             helper.upload_log_artifacts(name=log_name),
             helper.coveralls_report(flag=helper.job_name(TEST_PYTHON_JOB_PREFIX, shard)),
         ],

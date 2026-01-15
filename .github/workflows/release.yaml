@@ -13,7 +13,6 @@ jobs:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: github.repository_owner == 'pantsbuild'
     name: Build wheels (Linux-x86_64)
     needs:
     - release_info
@@ -148,7 +147,6 @@ jobs:
       ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: false
       PANTS_REMOTE_CACHE_READ: 'false'
       PANTS_REMOTE_CACHE_WRITE: 'false'
-    if: github.repository_owner == 'pantsbuild'
     name: Build wheels (macOS14-ARM64)
     needs:
     - release_info
@@ -280,7 +278,7 @@ jobs:
   publish:
     env:
       MODE: debug
-    if: github.repository_owner == 'pantsbuild' && needs.release_info.outputs.is-release == 'true'
+    if: needs.release_info.outputs.is-release == 'true'
     needs:
     - build_wheels_linux_x86_64
     - build_wheels_macos14_arm64
@@ -344,22 +342,6 @@ jobs:
       name: Generate announcement
       run: |
         ./pants run src/python/pants_release/generate_release_announcement.py                         -- --output-dir=${{ runner.temp }}
-    - name: Announce release to Slack
-      uses: slackapi/slack-github-action@v2.1.1
-      with:
-        method: chat.postMessage
-        payload-file-path: ${{ runner.temp }}/slack_announcement.json
-        token: ${{ secrets.SLACK_BOT_TOKEN }}
-    - name: Announce to pants-devel
-      uses: dawidd6/action-send-mail@v3.8.0
-      with:
-        body: file://${{ runner.temp }}/email_announcement_body.md
-        connection_url: ${{ secrets.EMAIL_CONNECTION_URL }}
-        convert_markdown: true
-        from: Pants Announce
-        secure: true
-        subject: file://${{ runner.temp }}/email_announcement_subject.txt
-        to: pants-devel@googlegroups.com
     - env:
         GH_REPO: ${{ github.repository }}
         GH_TOKEN: ${{ github.token }}
@@ -374,19 +356,6 @@ jobs:
       name: Publish GitHub Release
       run: |
         gh release edit ${{ needs.release_info.outputs.build-ref }} --draft=false --notes-file notes.txt
-    - env:
-        GH_TOKEN: ${{ secrets.WORKER_PANTS_CHEESESHOP_TRIGGER_PAT }}
-      name: Trigger cheeseshop build
-      run: |
-        gh api -X POST "/repos/pantsbuild/wheels.pantsbuild.org/dispatches" -F event_type=github-pages
-    - env:
-        GH_TOKEN: ${{ secrets.WORKER_PANTS_PANTSBUILD_ORG_TRIGGER_PAT }}
-      if: needs.release_info.outputs.is-release == 'true'
-      name: Trigger docs sync
-      run: |
-        RELEASE_TAG=${{ needs.release_info.outputs.build-ref }}
-        RELEASE_VERSION="${RELEASE_TAG#release_}"
-        gh workflow run sync_docs.yml -F "version=$RELEASE_VERSION" -F "reviewer=${{ github.actor }}" -R pantsbuild/pantsbuild.org
   release_info:
     name: Create draft release and output info
     outputs:
@@ -413,7 +382,7 @@ jobs:
         GH_REPO: ${{ github.repository }}
         GH_TOKEN: ${{ github.token }}
       id: make_draft_release
-      if: github.repository_owner == 'pantsbuild' && steps.get_info.outputs.is-release == 'true'
+      if: steps.get_info.outputs.is-release == 'true'
       name: Make GitHub Release
       run: |
         RELEASE_TAG=${{ steps.get_info.outputs.build-ref }}
