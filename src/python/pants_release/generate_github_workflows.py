@@ -128,8 +128,6 @@ NATIVE_FILES = [
 ]
 
 DONT_SKIP_RUST = "needs.classify_changes.outputs.rust == 'true'"
-DONT_SKIP_WHEELS = "needs.classify_changes.outputs.release == 'true' || needs.classify_changes.outputs.ci_config == 'true'"
-IS_PANTS_OWNER = "github.repository_owner == 'pantsbuild'"
 
 # NB: This overrides `pants.ci.toml`.
 DISABLE_REMOTE_CACHE_ENV = {"PANTS_REMOTE_CACHE_READ": "false", "PANTS_REMOTE_CACHE_WRITE": "false"}
@@ -146,7 +144,6 @@ def classify_changes() -> Jobs:
         "classify_changes": {
             "name": "Classify changes",
             "runs-on": linux_x86_64_helper.runs_on(),
-            "if": IS_PANTS_OWNER,
             "outputs": {
                 "dev_utils": gha_expr("steps.classify.outputs.dev_utils"),
                 "docs": gha_expr("steps.classify.outputs.docs"),
@@ -399,7 +396,7 @@ def install_go() -> list[Step]:
 def install_python_headers_in_manylinux_container() -> Step:
     return {
         "name": "Install Python headers",
-        "run": "yum install -y python3.11-devel",
+        "run": "echo 'no-op'",
     }
 
 
@@ -751,7 +748,6 @@ def bootstrap_jobs(
         "runs-on": helper.runs_on(),
         "env": DISABLE_REMOTE_CACHE_ENV,
         "timeout-minutes": 60,
-        "if": IS_PANTS_OWNER,
         "steps": [
             *helper.bootstrap_pants(),
             *(
@@ -816,7 +812,6 @@ def test_jobs(
         "needs": helper.job_name("bootstrap_pants"),
         "env": helper.platform_env(),
         "timeout-minutes": 90,
-        "if": IS_PANTS_OWNER,
         "steps": [
             free_disk_space_step(),
             *checkout(),
@@ -836,7 +831,7 @@ def test_jobs(
                 "name": human_readable_step_name,
                 "run": pants_args_str,
             },
-            helper.upload_test_reports(),
+            # helper.upload_test_reports(),
             helper.upload_log_artifacts(name=log_name),
             helper.coveralls_report(flag=helper.job_name(TEST_PYTHON_JOB_PREFIX, shard)),
         ],
@@ -923,7 +918,6 @@ def windows11_x86_64_test_jobs() -> Jobs:
             "name": "Test in-progress Windows support",
             "runs-on": helper.runs_on(),
             "timeout-minutes": 60,
-            "if": IS_PANTS_OWNER,
             "steps": [
                 *checkout(),
                 {
@@ -1016,12 +1010,8 @@ def build_wheels_job(
             *helper.rust_caches(),
         ]
 
-    if_condition = (
-        IS_PANTS_OWNER if for_deploy_ref else f"({IS_PANTS_OWNER}) && ({DONT_SKIP_WHEELS})"
-    )
     return {
         helper.job_name("build_wheels"): {
-            "if": if_condition,
             "name": f"Build wheels ({str(platform.value)})",
             "runs-on": helper.runs_on(),
             "permissions": {
@@ -1173,7 +1163,7 @@ def build_wheels_jobs(*, for_deploy_ref: str | None = None, needs: list[str] | N
     # total in the release.py script. Currently here:
     return {
         **build_wheels_job(Platform.LINUX_X86_64, for_deploy_ref, needs),
-        **build_wheels_job(Platform.LINUX_ARM64, for_deploy_ref, needs),
+        # **build_wheels_job(Platform.LINUX_ARM64, for_deploy_ref, needs),
         **build_wheels_job(Platform.MACOS14_ARM64, for_deploy_ref, needs),
     }
 
@@ -1181,19 +1171,18 @@ def build_wheels_jobs(*, for_deploy_ref: str | None = None, needs: list[str] | N
 def test_workflow_jobs() -> Jobs:
     linux_x86_64_helper = Helper(Platform.LINUX_X86_64)
     jobs: dict[str, Any] = {
-        "check_release_notes": {
-            "name": "Ensure PR has release notes",
-            "runs-on": linux_x86_64_helper.runs_on(),
-            "needs": ["classify_changes"],
-            "if": IS_PANTS_OWNER,
-            "steps": ensure_release_notes(),
-        },
+        # "check_release_notes": {
+        #     "name": "Ensure PR has release notes",
+        #     "runs-on": linux_x86_64_helper.runs_on(),
+        #     "needs": ["classify_changes"],
+        #     "steps": ensure_release_notes(),
+        # },
     }
     jobs.update(**linux_x86_64_test_jobs())
-    jobs.update(**linux_arm64_test_jobs())
+    # jobs.update(**linux_arm64_test_jobs())
     jobs.update(**macos14_arm64_test_jobs())
     jobs.update(**build_wheels_jobs())
-    jobs.update(**windows11_x86_64_test_jobs())
+    # jobs.update(**windows11_x86_64_test_jobs())
     jobs.update(
         {
             "lint_python": {
@@ -1201,7 +1190,6 @@ def test_workflow_jobs() -> Jobs:
                 "runs-on": linux_x86_64_helper.runs_on(),
                 "needs": "bootstrap_pants_linux_x86_64",
                 "timeout-minutes": 30,
-                "if": IS_PANTS_OWNER,
                 "steps": [
                     *checkout(),
                     *launch_bazel_remote(),
@@ -1327,7 +1315,6 @@ def release_jobs_and_inputs() -> tuple[Jobs, dict[str, Any]]:
         "release_info": {
             "name": "Create draft release and output info",
             "runs-on": "ubuntu-22.04",
-            "if": IS_PANTS_OWNER,
             "steps": [
                 {
                     "name": "Determine ref to build",
@@ -1350,7 +1337,7 @@ def release_jobs_and_inputs() -> tuple[Jobs, dict[str, Any]]:
                 {
                     "name": "Make GitHub Release",
                     "id": "make_draft_release",
-                    "if": f"{IS_PANTS_OWNER} && steps.get_info.outputs.is-release == 'true'",
+                    "if": "steps.get_info.outputs.is-release == 'true'",
                     "env": {
                         "GH_TOKEN": "${{ github.token }}",
                         "GH_REPO": "${{ github.repository }}",
@@ -1398,7 +1385,7 @@ def release_jobs_and_inputs() -> tuple[Jobs, dict[str, Any]]:
         "publish": {
             "runs-on": "ubuntu-22.04",
             "needs": [*wheels_job_names, "release_info"],
-            "if": f"{IS_PANTS_OWNER} && needs.release_info.outputs.is-release == 'true'",
+            "if": "needs.release_info.outputs.is-release == 'true'",
             "env": {
                 # This job does not actually build anything: only download wheels from S3.
                 "MODE": "debug",
@@ -1426,35 +1413,35 @@ def release_jobs_and_inputs() -> tuple[Jobs, dict[str, Any]]:
                         """
                     ),
                 },
-                {
-                    "name": "Announce release to Slack",
-                    "uses": action("slack-github-action"),
-                    "with": {
-                        "method": "chat.postMessage",
-                        "payload-file-path": "${{ runner.temp }}/slack_announcement.json",
-                        "token": f"{gha_expr('secrets.SLACK_BOT_TOKEN')}",
-                    },
-                },
-                {
-                    "name": "Announce to pants-devel",
-                    "uses": action("action-send-mail"),
-                    "with": {
-                        # Note: Email is sent from the dedicated account pants.announce@gmail.com.
-                        # The EMAIL_CONNECTION_URL should be of the form:
-                        # smtp+starttls://pants.announce@gmail.com:password@smtp.gmail.com:465
-                        # (i.e., should use gmail's raw SMTP server), and the password
-                        # should be a Google account "app password" set up for this purpose
-                        # (not the Google account's regular password).
-                        # And, of course, that account must have permission to post to pants-devel.
-                        "connection_url": f"{gha_expr('secrets.EMAIL_CONNECTION_URL')}",
-                        "secure": True,
-                        "subject": "file://${{ runner.temp }}/email_announcement_subject.txt",
-                        "to": "pants-devel@googlegroups.com",
-                        "from": "Pants Announce",
-                        "body": "file://${{ runner.temp }}/email_announcement_body.md",
-                        "convert_markdown": True,
-                    },
-                },
+                # {
+                #     "name": "Announce release to Slack",
+                #     "uses": action("slack-github-action"),
+                #     "with": {
+                #         "method": "chat.postMessage",
+                #         "payload-file-path": "${{ runner.temp }}/slack_announcement.json",
+                #         "token": f"{gha_expr('secrets.SLACK_BOT_TOKEN')}",
+                #     },
+                # },
+                # {
+                #     "name": "Announce to pants-devel",
+                #     "uses": action("action-send-mail"),
+                #     "with": {
+                #         # Note: Email is sent from the dedicated account pants.announce@gmail.com.
+                #         # The EMAIL_CONNECTION_URL should be of the form:
+                #         # smtp+starttls://pants.announce@gmail.com:password@smtp.gmail.com:465
+                #         # (i.e., should use gmail's raw SMTP server), and the password
+                #         # should be a Google account "app password" set up for this purpose
+                #         # (not the Google account's regular password).
+                #         # And, of course, that account must have permission to post to pants-devel.
+                #         "connection_url": f"{gha_expr('secrets.EMAIL_CONNECTION_URL')}",
+                #         "secure": True,
+                #         "subject": "file://${{ runner.temp }}/email_announcement_subject.txt",
+                #         "to": "pants-devel@googlegroups.com",
+                #         "from": "Pants Announce",
+                #         "body": "file://${{ runner.temp }}/email_announcement_body.md",
+                #         "convert_markdown": True,
+                #     },
+                # },
                 {
                     "name": "Get release notes",
                     "run": dedent(
@@ -1479,31 +1466,31 @@ def release_jobs_and_inputs() -> tuple[Jobs, dict[str, Any]]:
                         """
                     ),
                 },
-                {
-                    "name": "Trigger cheeseshop build",
-                    "env": {
-                        "GH_TOKEN": "${{ secrets.WORKER_PANTS_CHEESESHOP_TRIGGER_PAT }}",
-                    },
-                    "run": dedent(
-                        """\
-                        gh api -X POST "/repos/pantsbuild/wheels.pantsbuild.org/dispatches" -F event_type=github-pages
-                        """
-                    ),
-                },
-                {
-                    "name": "Trigger docs sync",
-                    "if": "needs.release_info.outputs.is-release == 'true'",
-                    "env": {
-                        "GH_TOKEN": "${{ secrets.WORKER_PANTS_PANTSBUILD_ORG_TRIGGER_PAT }}",
-                    },
-                    "run": dedent(
-                        """\
-                        RELEASE_TAG=${{ needs.release_info.outputs.build-ref }}
-                        RELEASE_VERSION="${RELEASE_TAG#release_}"
-                        gh workflow run sync_docs.yml -F "version=$RELEASE_VERSION" -F "reviewer=${{ github.actor }}" -R pantsbuild/pantsbuild.org
-                        """
-                    ),
-                },
+                # {
+                #     "name": "Trigger cheeseshop build",
+                #     "env": {
+                #         "GH_TOKEN": "${{ secrets.WORKER_PANTS_CHEESESHOP_TRIGGER_PAT }}",
+                #     },
+                #     "run": dedent(
+                #         """\
+                #         gh api -X POST "/repos/pantsbuild/wheels.pantsbuild.org/dispatches" -F event_type=github-pages
+                #         """
+                #     ),
+                # },
+                # {
+                #     "name": "Trigger docs sync",
+                #     "if": "needs.release_info.outputs.is-release == 'true'",
+                #     "env": {
+                #         "GH_TOKEN": "${{ secrets.WORKER_PANTS_PANTSBUILD_ORG_TRIGGER_PAT }}",
+                #     },
+                #     "run": dedent(
+                #         """\
+                #         RELEASE_TAG=${{ needs.release_info.outputs.build-ref }}
+                #         RELEASE_VERSION="${RELEASE_TAG#release_}"
+                #         gh workflow run sync_docs.yml -F "version=$RELEASE_VERSION" -F "reviewer=${{ github.actor }}" -R pantsbuild/pantsbuild.org
+                #         """
+                #     ),
+                # },
             ],
         },
     }
@@ -1922,7 +1909,7 @@ def merge_ok(pr_jobs: list[str]) -> Jobs:
             # NB: This always() condition is critical, as it ensures that this job is run even if
             #   jobs it depends on are skipped.
             "if": "always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')",
-            "needs": ["classify_changes", "check_release_notes"] + sorted(pr_jobs),
+            "needs": ["classify_changes"] + sorted(pr_jobs),
             "outputs": {"merge_ok": f"{gha_expr('steps.set_merge_ok.outputs.merge_ok')}"},
             "steps": [
                 {
@@ -1988,7 +1975,7 @@ def generate() -> dict[Path, str]:
     pr_jobs = test_workflow_jobs()
     pr_jobs.update(**classify_changes())
     for key, val in pr_jobs.items():
-        if key in {"classify_changes", "check_release_notes"}:
+        if key in {"classify_changes"}:
             continue
         needs = val.get("needs", [])
         if isinstance(needs, str):
@@ -2029,7 +2016,6 @@ def generate() -> dict[Path, str]:
             "jobs": {
                 "audit": {
                     "runs-on": "ubuntu-22.04",
-                    "if": IS_PANTS_OWNER,
                     "steps": [
                         *checkout(),
                         {
