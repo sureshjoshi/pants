@@ -34,7 +34,7 @@ class PantsService(ABC):
         self.name = self.__class__.__name__
         self._state = _ServiceState()
 
-    def setup(self, services: tuple["PantsService", ...]):
+    def setup(self, services: tuple[PantsService, ...]):
         """Called before `run` to allow for service->service or other side-effecting setup."""
         self.services = services
 

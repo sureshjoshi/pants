@@ -56,7 +56,7 @@ def pass_through_unserializable_metadata(obj):
 class WorkunitLoggerCallback(WorkunitsCallback):
     """Configuration for WorkunitLogger."""
 
-    def __init__(self, wulogger: "WorkunitLogger"):
+    def __init__(self, wulogger: WorkunitLogger):
         self.wulogger = wulogger
         self._completed_workunits: dict[str, object] = {}
 

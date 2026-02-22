@@ -57,7 +57,7 @@ markers = ["platform_specific_behavior"]
 # Exclusions were copied from [tool.black]
 exclude = [".git", ".mypy_cache", ".pants.d", "dist/"]
 line-length = 100
-target-version = "py311"
+target-version = "py314"
 
 [tool.ruff.lint]
 # I: isort (import sorting)
