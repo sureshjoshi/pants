@@ -401,6 +401,40 @@ def test_non_hermetic_venv_scripts(rule_runner: PythonRuleRunner) -> None:
     assert bob_sys_path_entry in non_hermetic_results.sys_path
 
 
+def test_no_compress_arg(rule_runner: PythonRuleRunner) -> None:
+    def get_size(address, output_name):
+        tgt = rule_runner.get_target(address)
+        field_set = PexBinaryFieldSet.create(tgt)
+        result = rule_runner.request(BuiltPackage, [field_set])
+        rule_runner.write_digest(result.digest)
+        return os.path.join(rule_runner.build_root, output_name)
+
+    rule_runner.write_files(
+        {
+            "src/py/project/BUILD": dedent(
+                """\
+                python_requirement(name="cowsay", requirements=["cowsay==6.1"])
+                pex_binary(
+                    name="compress",
+                    dependencies=[":cowsay"],
+                )
+                pex_binary(
+                    name="no-compress",
+                    dependencies=[":cowsay"],
+                    compress=False,
+                )
+                """
+            ),
+        }
+    )
+
+    assert get_size(
+        Address("src/py/project", target_name="compress"), "src.py.project/compress.pex"
+    ) < get_size(
+        Address("src/py/project", target_name="no-compress"), "src.py.project/no-compress.pex"
+    )
+
+
 def test_sh_boot_plumb(rule_runner: PythonRuleRunner) -> None:
     rule_runner.write_files(
         {
@@ -918,6 +952,67 @@ def test_scie_pbs_debug(rule_runner: PythonRuleRunner) -> None:
     executable = os.path.join(rule_runner.build_root, "src.py.project/project")
     output = subprocess.check_output(executable, env={"SCIE": "inspect"})
     assert b"stripped" not in output
+
+
+def test_scie_with_local_dist(rule_runner: PythonRuleRunner) -> None:
+    # This is a regression test for a bug early in adding scie support where
+    # the --requirements-pex flag was lost when building a scie pex, causing
+    # local distributions to not be included in the final executable.
+    rule_runner.write_files(
+        {
+            "lib/__init__.py": "",
+            "lib/greeting.py": dedent(
+                """\
+                def get_greeting():
+                    return "Hello from local dist!"
+                """
+            ),
+            "lib/BUILD": dedent(
+                """\
+                python_sources(name="sources")
+
+                python_distribution(
+                    name="dist",
+                    dependencies=[":sources"],
+                    provides=python_artifact(
+                        name="guten-tag-lib",
+                        version="0.0.1",
+                    ),
+                )
+                """
+            ),
+            "app/main.py": dedent(
+                """\
+                from lib.greeting import get_greeting
+
+                if __name__ == "__main__":
+                    print(get_greeting())
+                """
+            ),
+            "app/BUILD": dedent(
+                """\
+                python_sources(name="sources")
+
+                pex_binary(
+                    name="app",
+                    entry_point="main.py",
+                    dependencies=[":sources", "lib:dist"],
+                    scie="eager",  # Going to run it, so might as well
+                    scie_pbs_release="20251031",
+                )
+                """
+            ),
+        }
+    )
+    tgt = rule_runner.get_target(Address("app", target_name="app"))
+    field_set = PexBinaryFieldSet.create(tgt)
+    result = rule_runner.request(BuiltPackage, [field_set])
+
+    rule_runner.write_digest(result.digest)
+    executable = os.path.join(rule_runner.build_root, "app/app")
+
+    output = subprocess.check_output([executable], text=True)
+    assert "Hello from local dist!" in output
 
 
 def test_scie_custom_exe_with_env_and_args(rule_runner: PythonRuleRunner) -> None:
