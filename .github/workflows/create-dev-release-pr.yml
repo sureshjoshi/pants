@@ -11,18 +11,21 @@ defaults:
     shell: bash
 
 jobs:
-  validate-version:
+  create-dev-pr:
     name: Sanity check the requested version
     runs-on: ubuntu-latest
-    outputs:
-      release-version: ${{ steps.validate-version.outputs.release-version }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - uses: actions/checkout@v6
 
       - name: Determine release version
         id: validate-version
         run: |
-          version="${{ github.event.inputs.version }}"
+          version="${{ inputs.version }}"
 
           if [[ -z "$version" ]]; then
               echo "::error::An input 'version' must be specified"
@@ -44,15 +47,12 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.validate-version.outputs.release-version }}
         run: |
-          version_file="src/python/pants/VERSION"
-          contributors_file=CONTRIBUTORS.md
-
           if [[ -z "$RELEASE_VERSION" ]]; then
-              echo "::error::An the 'release_version' was empty"
+              echo "::error::The 'release_version' was empty"
               exit 1
           fi
 
-          echo "$RELEASE_VERSION" > "$version_file"
+          echo "$RELEASE_VERSION" > src/python/pants/VERSION
 
           # Create an alphabetical list of all contributors, using the .mailmap where available (stripping bots)
           # The `sed` at the end is to match the existing Python code which prefixes a "+ " to each name
@@ -66,7 +66,7 @@ jobs:
                     -e "github-actions[bot]" \
                     -e "Worker Pants (Pantsbuild GitHub Automation Bot)" \
                 | sed 's/^/+ /'
-          } > "$contributors_file"
+          } > CONTRIBUTORS.md
 
       - name: Commit changes and create PR
         env:
@@ -82,18 +82,18 @@ jobs:
           git config --local user.name "Worker Pants (Pantsbuild GitHub Automation Bot)"
 
           branch_name="automation/release/$RELEASE_VERSION"
-          git checkout -b $branch_name
+          git checkout -b "$branch_name"
           
           title="Prepare $RELEASE_VERSION"
-          git add --all
-          git commit -m $title
+          git add src/python/pants/VERSION CONTRIBUTORS.md
+          git commit -m "$title"
           git push -u origin "$branch_name"
 
           # Create PR from branch to main
           gh pr create \
-            --title $title \
+            --title "$title" \
             --body "" \
             --base main \
-            --head "$branch_name"
+            --head "$branch_name" \
             --label "automation:release-prep,category:internal" \
             --assignee "${{ github.actor }}"
