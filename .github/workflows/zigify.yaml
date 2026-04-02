@@ -1,0 +1,32 @@
+name: Testing stuff
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  do-a-thing:
+    name: Doing a thing
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v6
+        with:
+          python-version: |-
+            3.14
+
+      - name: Grab them deps
+        run: |
+          rustup target add aarch64-unknown-linux-gnu
+          cargo install --locked cargo-zigbuild
+          # Install protoc 
+
+      - name: Try compiling
+        run: |
+          cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
+          
