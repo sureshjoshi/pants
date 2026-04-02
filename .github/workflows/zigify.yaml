@@ -127,10 +127,7 @@ jobs:
         with:
           path: ${{ env.ZIG_HOME }}
           key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
-
-      - name: Check zig
-        if: steps.restore-zig.outputs.cache-hit != 'true'
-        run: exit 1
+          fail-on-cache-miss: true
 
       - name: Restore cargo-zigbuild cache
         uses: actions/cache/restore@v5
@@ -138,10 +135,7 @@ jobs:
         with:
           path: ~/.cargo/bin/cargo-zigbuild
           key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
-
-      - name: Check cargo-zigbuild
-        if: steps.restore-cargo-zigbuild.outputs.cache-hit != 'true'
-        run: exit 1
+          fail-on-cache-miss: true
 
       - name: Restore protoc
         id: restore-protoc
@@ -149,10 +143,7 @@ jobs:
         with:
           path: ${{ env.PROTOC_HOME }}
           key: cache-protoc-${{ runner.os }}-${{ env.PROTOC_VERSION }}
-      
-      - name: Check protoc
-        if: steps.restore-protoc.outputs.cache-hit != 'true'
-        run: exit 1
+          fail-on-cache-miss: true
 
       # TODO: This is per-arch
       - name: Restore PBS aarch64
@@ -161,10 +152,7 @@ jobs:
         with:
           path: ${{ env.PBS_AARCH_HOME }}
           key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
-    
-      - name: Check pbs
-        if: steps.restore-pbs-aarch.outputs.cache-hit != 'true'
-        run: exit 1
+          fail-on-cache-miss: true
 
       # ================================
       # Build
@@ -172,10 +160,11 @@ jobs:
 
       - name: Setup PATHs
         run: |
-          echo "${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
-          echo "${{ env.ZIG_HOME }}" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/${{ env.ZIG_HOME }}" >> $GITHUB_PATH
           echo "${{ env.PYTHON_AARCH_HOME }}/bin" >> $GITHUB_PATH
 
+          echo "::notice::GH=${{ github.workspace }}"
           echo "::notice::PATH=$PATH"
           echo "::notice::GITHUB_PATH=$GITHUB_PATH"
           
