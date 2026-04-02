@@ -15,8 +15,9 @@ env:
   PROTOC_VERSION: "34.1"
   # TODO: Stupid name
   PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
+  # TODO: Organize to only use a single version - since we can't use env in env
   PBS_VERSION: "20260325"
-  PBS_VERSION_FULL: "${{ env.PYTHON_MAJOR_MINOR }}+${{ env.PBS_VERSION }}"
+  PBS_VERSION_FULL: "3.14.3+20260325"
   PYTHON_MAJOR_MINOR: "3.14"
   ZIG_HOME: "$HOME/.zig"
   ZIG_VERSION: "0.15.2"
