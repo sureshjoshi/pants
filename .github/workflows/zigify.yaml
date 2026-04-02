@@ -22,12 +22,26 @@ jobs:
 
       - name: Grab them deps
         run: |
+          echo "::notice::PATH=$PATH"
+          # TODO: Curl and unpack this
+          apt-get install protobuf-compiler
+          # TODO: Curl and unpack this, leave PyPi alone
           pip install ziglang
           rustup target add aarch64-unknown-linux-gnu
+          # TODO: Version this - need at least (0.22.1) for some aws-ls-rc issues
           cargo install --locked cargo-zigbuild
-          # Install protoc 
+          echo "::notice::zig=$(zig --version)"
+          echo "::notice::cargo-zig=$(cargo-zig --version)"
+          echo "::notice::protoc=$(protoc --version)"
 
       - name: Try compiling
         run: |
           cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
           
+      - name: Upload stuff
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: engine
+          path: ./src/rust/target/release/*
+          retention-days: 1
