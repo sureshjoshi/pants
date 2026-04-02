@@ -52,6 +52,7 @@ jobs:
           echo "::notice::PATH=$PATH"
           echo "::notice::GITHUB_PATH=$GITHUB_PATH"
           
+          # TODO: There is no zig
           echo "::notice::zig=$(zig --version)"
           echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
           echo "::notice::protoc=$(protoc --version)"
@@ -77,10 +78,13 @@ jobs:
           RUSTFLAGS: "-L /tmp/python-aarch/lib"
         run: |
           cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
+          echo "::notice::$(ls -la)"
+          echo "::notice::$(ls -la ./src/rust/target)"
+          echo "::notice::$(ls -la ./src/rust/target/release)"
 
-      - name: Upload stuff
-        uses: actions/upload-artifact@v7
-        with:
-          name: engine
-          path: ./src/rust/target/release/*
-          retention-days: 1
+      # - name: Upload stuff
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: engine
+      #     path: ./src/rust/target/release/*
+      #     retention-days: 1
