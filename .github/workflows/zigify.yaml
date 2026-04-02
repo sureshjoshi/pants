@@ -163,7 +163,7 @@ jobs:
           key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
     
       - name: Check pbs
-        if: steps.restore-pbs-aarch.cache-hit != 'true'
+        if: steps.restore-pbs-aarch.outputs.cache-hit != 'true'
         run: exit 1
 
       # ================================
