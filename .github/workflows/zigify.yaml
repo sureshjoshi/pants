@@ -55,14 +55,29 @@ jobs:
           echo "::notice::zig=$(zig --version)"
           echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
           echo "::notice::protoc=$(protoc --version)"
+      
+      - name: Install aarch python deps
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # TODO: Set as output path
+          PY_AARCH_DIR="/tmp/python-aarch"
+          mkdir -p $PY_AARCH_DIR
+          PBS_VERSION="cpython-3.14.3+20260325-aarch64-unknown-linux-gnu-install_only_stripped"
+          PBS_ARCHIVE="$PBS_VERSION.tar.gz"
+
+          gh release download 20260325 --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
+          tar xf "/tmp/$PBS_ARCHIVE" --directory $PY_AARCH_DIR --strip-components=1
+          echo "::notice::AARCH_DIR=$(ls $PY_AARCH_DIR)"
 
       - name: Try compiling
         env:
           PYO3_CROSS_PYTHON_VERSION: "3.14"
           AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
+          RUST_FLAGS: "/tmp/python-aarch/lib"
         run: |
           cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
-          
+
       - name: Upload stuff
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v5
