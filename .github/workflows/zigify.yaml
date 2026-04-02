@@ -21,6 +21,8 @@ jobs:
             3.14
 
       - name: Grab them deps
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "::notice::PATH=$PATH"
           echo "::notice::GITHUB_PATH=$GITHUB_PATH"
