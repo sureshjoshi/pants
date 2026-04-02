@@ -11,12 +11,12 @@ defaults:
 
 env:
   CARGO_ZIGBUILD_VERSION: "0.22.1"
-  PROTOC_HOME: "~/.protoc"
+  PROTOC_HOME: "$HOME/.protoc"
   PROTOC_VERSION: "34.1"
   # TODO: Stupid name
   PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
   PBS_VERSION: "20260325"
-  ZIG_HOME: "~/.zig"
+  ZIG_HOME: "$HOME/.zig"
   ZIG_VERSION: "0.15.2"
 
 jobs:
@@ -38,6 +38,7 @@ jobs:
       - name: Setup Zig
         if: steps.cache-zig.outputs.cache-hit != 'true'
         run: |
+          set -euo pipefail
           mkdir -p ${{ env.ZIG_HOME }}
           ZIG_ARCHIVE="zig-x86_64-linux-${{ env.ZIG_VERSION }}.tar.xz"
           curl -v -L "https://ziglang.org/download/${{ env.ZIG_VERSION }}/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
@@ -51,7 +52,7 @@ jobs:
         id: cache-cargo-zigbuild
         uses: actions/cache@v5
         with:
-          path: ~/.cargo/bin/cargo-zigbuild
+          path: "$HOME/.cargo/bin/cargo-zigbuild"
           key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
 
       - name: Setup cargo-zigbuild
@@ -73,6 +74,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           mkdir -p ${{ env.PROTOC_HOME }}
           PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip"
           gh release download v${{ env.PROTOC_VERSION }} --repo protocolbuffers/protobuf --pattern $PROTOC_ZIP --dir /tmp/
@@ -95,6 +97,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           mkdir -p ${{ env.PBS_AARCH_HOME }}
           PBS_ARCHIVE="cpython-${{ env.PBS_VERSION }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
           gh release download ${{ env.PBS_VERSION }} --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
@@ -131,7 +134,7 @@ jobs:
         uses: actions/cache/restore@v5
         id: restore-zig
         with:
-          path: ~/.cargo/bin/cargo-zigbuild
+          path: ${{ env.ZIG_HOME }}
           key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
 
       - name: Check zig
@@ -142,7 +145,7 @@ jobs:
         uses: actions/cache/restore@v5
         id: restore-cargo-zigbuild
         with:
-          path: ~/.cargo/bin/cargo-zigbuild
+          path: "$HOME/.cargo/bin/cargo-zigbuild"
           key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
 
       - name: Check cargo-zigbuild
