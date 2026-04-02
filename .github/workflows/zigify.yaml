@@ -23,15 +23,32 @@ jobs:
       - name: Grab them deps
         run: |
           echo "::notice::PATH=$PATH"
-          # TODO: Curl and unpack this
-          apt-get install protobuf-compiler
-          # TODO: Curl and unpack this, leave PyPi alone
-          pip install ziglang
+          echo "::notice::GITHUB_PATH=$GITHUB_PATH"
+          
+          # TODO: Add SHA/size checks
+          # TODO: Move these somewhere easily cacheable
+          
           rustup target add aarch64-unknown-linux-gnu
+          
+          PROTOC_ZIP="protoc-34.1-linux-x86_64.zip"
+          gh release download v34.1 --repo protocolbuffers/protobuf --pattern $PROTOC_ZIP --dir /tmp/
+          unzip /tmp/$PROTOC_ZIP -d "$HOME/.local/"
+          
+          ZIG_VERSION="zig-x86_64-linux-0.15.2"
+          ZIG_ARCHIVE="$ZIG_VERSION.tar.xz"
+          curl -v -L "https://ziglang.org/download/0.15.2/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
+          tar xf "/tmp/$ZIG_ARCHIVE" --directory "$HOME/.local/bin"
+          echo "$HOME/.local/bin/$ZIG_VERSION" >> "$GITHUB_PATH"
+          
           # TODO: Version this - need at least (0.22.1) for some aws-ls-rc issues
+          # TODO: Use pre-builts?
           cargo install --locked cargo-zigbuild
+          
+          echo "::notice::PATH=$PATH"
+          echo "::notice::GITHUB_PATH=$GITHUB_PATH"
+          
           echo "::notice::zig=$(zig --version)"
-          echo "::notice::cargo-zig=$(cargo-zig --version)"
+          echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
           echo "::notice::protoc=$(protoc --version)"
 
       - name: Try compiling
