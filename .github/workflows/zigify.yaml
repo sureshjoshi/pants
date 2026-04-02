@@ -11,7 +11,7 @@ defaults:
 
 env:
   CARGO_ZIGBUILD_VERSION: "0.22.1"
-  PROTOC_HOME: "/wtf/protoc"
+  PROTOC_HOME: "sj-tools/protoc"
   PROTOC_VERSION: "34.1"
   # TODO: Stupid name
   PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
@@ -19,7 +19,7 @@ env:
   PBS_VERSION: "20260325"
   PBS_VERSION_FULL: "3.14.3+20260325"
   PYTHON_MAJOR_MINOR: "3.14"
-  ZIG_HOME: "/wtf/zig"
+  ZIG_HOME: "sj-tools/zig"
   ZIG_VERSION: "0.15.2"
 
 jobs:
