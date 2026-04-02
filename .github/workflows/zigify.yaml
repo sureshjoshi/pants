@@ -16,6 +16,8 @@ env:
   # TODO: Stupid name
   PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
   PBS_VERSION: "20260325"
+  PBS_VERSION_FULL: "${{ env.PYTHON_MAJOR_MINOR }}+${{ env.PBS_VERSION }}"
+  PYTHON_MAJOR_MINOR: "3.14"
   ZIG_HOME: "$HOME/.zig"
   ZIG_VERSION: "0.15.2"
 
@@ -99,7 +101,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ${{ env.PBS_AARCH_HOME }}
-          PBS_ARCHIVE="cpython-${{ env.PBS_VERSION }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
+          PBS_ARCHIVE="cpython-${{ env.PBS_VERSION_FULL }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
           gh release download ${{ env.PBS_VERSION }} --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
           tar xf "/tmp/$PBS_ARCHIVE" --directory ${{ env.PBS_AARCH_HOME }} --strip-components=1
 
