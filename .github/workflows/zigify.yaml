@@ -126,7 +126,7 @@ jobs:
         id: restore-zig
         with:
           path: ${{ env.ZIG_HOME }}
-          key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
+          key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
 
       - name: Check zig
         if: steps.restore-zig.outputs.cache-hit != 'true'
