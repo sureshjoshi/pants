@@ -11,7 +11,7 @@ defaults:
 
 env:
   CARGO_ZIGBUILD_VERSION: "0.22.1"
-  PROTOC_HOME: "$HOME/.protoc"
+  PROTOC_HOME: "~/.protoc"
   PROTOC_VERSION: "34.1"
   # TODO: Stupid name
   PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
@@ -19,7 +19,7 @@ env:
   PBS_VERSION: "20260325"
   PBS_VERSION_FULL: "3.14.3+20260325"
   PYTHON_MAJOR_MINOR: "3.14"
-  ZIG_HOME: "$HOME/.zig"
+  ZIG_HOME: "~/.zig"
   ZIG_VERSION: "0.15.2"
 
 jobs:
@@ -28,39 +28,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ================================
-      # zig
-      # ================================
-      - name: Cache Zig
-        id: cache-zig
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.ZIG_HOME }}
-          key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
+      # # ================================
+      # # zig
+      # # ================================
+      # - name: Cache Zig
+      #   id: cache-zig
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: ${{ env.ZIG_HOME }}
+      #     key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
 
-      - name: Setup Zig
-        if: steps.cache-zig.outputs.cache-hit != 'true'
-        run: |
-          set -euo pipefail
-          mkdir -p ${{ env.ZIG_HOME }}
-          ZIG_ARCHIVE="zig-x86_64-linux-${{ env.ZIG_VERSION }}.tar.xz"
-          curl -v -L "https://ziglang.org/download/${{ env.ZIG_VERSION }}/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
-          tar xf "/tmp/$ZIG_ARCHIVE" --directory "${{ env.ZIG_HOME }}" --strip-components=1
+      # - name: Setup Zig
+      #   if: steps.cache-zig.outputs.cache-hit != 'true'
+      #   run: |
+      #     set -euo pipefail
+      #     mkdir -p "${{ env.ZIG_HOME }}"
+      #     ZIG_ARCHIVE="zig-x86_64-linux-${{ env.ZIG_VERSION }}.tar.xz"
+      #     curl -v -L "https://ziglang.org/download/${{ env.ZIG_VERSION }}/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
+      #     tar xf "/tmp/$ZIG_ARCHIVE" --directory "${{ env.ZIG_HOME }}" --strip-components=1
 
-      # ================================
-      # cargo-zigbuild
-      # ================================
-      # TODO: This will be under the rust-cache
-      - name: Cache cargo-zigbuild
-        id: cache-cargo-zigbuild
-        uses: actions/cache@v5
-        with:
-          path: "$HOME/.cargo/bin/cargo-zigbuild"
-          key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
+      # # ================================
+      # # cargo-zigbuild
+      # # ================================
+      # # TODO: This will be under the rust-cache
+      # - name: Cache cargo-zigbuild
+      #   id: cache-cargo-zigbuild
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: "$HOME/.cargo/bin/cargo-zigbuild"
+      #     key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
 
-      - name: Setup cargo-zigbuild
-        if: steps.cache-cargo-zigbuild.outputs.cache-hit != 'true'
-        run: cargo install --locked cargo-zigbuild --version ${{ env.CARGO_ZIGBUILD_VERSION }}
+      # - name: Setup cargo-zigbuild
+      #   if: steps.cache-cargo-zigbuild.outputs.cache-hit != 'true'
+      #   run: cargo install --locked cargo-zigbuild --version ${{ env.CARGO_ZIGBUILD_VERSION }}
 
       # ================================
       # protoc
@@ -78,45 +78,33 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          mkdir -p ${{ env.PROTOC_HOME }}
+          mkdir -p "${{ env.PROTOC_HOME }}"
           PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip"
           gh release download v${{ env.PROTOC_VERSION }} --repo protocolbuffers/protobuf --pattern $PROTOC_ZIP --dir /tmp/
           unzip /tmp/$PROTOC_ZIP -d "${{ env.PROTOC_HOME }}"
 
 
-      # ================================
-      # PBS
-      # ================================
-      # TODO: Handle this per-arch?
-      - name: Cache PBS aarch64
-        id: cache-pbs-aarch
-        uses: actions/cache@v5
-        with:
-          path: ${{ env.PBS_AARCH_HOME }}
-          key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
+      # # ================================
+      # # PBS
+      # # ================================
+      # # TODO: Handle this per-arch?
+      # - name: Cache PBS aarch64
+      #   id: cache-pbs-aarch
+      #   uses: actions/cache@v5
+      #   with:
+      #     path: ${{ env.PBS_AARCH_HOME }}
+      #     key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
 
-      - name: Setup aarch64 Python
-        if: steps.cache-pbs-aarch.outputs.cache-hit != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          mkdir -p ${{ env.PBS_AARCH_HOME }}
-          PBS_ARCHIVE="cpython-${{ env.PBS_VERSION_FULL }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
-          gh release download ${{ env.PBS_VERSION }} --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
-          tar xf "/tmp/$PBS_ARCHIVE" --directory ${{ env.PBS_AARCH_HOME }} --strip-components=1
-
-      # - name: Try compiling
+      # - name: Setup aarch64 Python
+      #   if: steps.cache-pbs-aarch.outputs.cache-hit != 'true'
       #   env:
-      #     PYO3_CROSS_PYTHON_VERSION: "3.14"
-      #     AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
-      #     RUSTFLAGS: "-L /tmp/python-aarch/lib"
+      #     GH_TOKEN: ${{ github.token }}
       #   run: |
-      #     cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
-      #     echo "::notice::$(ls -la)"
-      #     echo "::notice::$(ls -la ./src/rust/target)"
-      #     echo "::notice::$(ls -la ./src/rust/target/release)"
-      #     echo "::notice::$(ls -la ./src/rust/target/aarch64-unknown-linux-gnu)"
+      #     set -euo pipefail
+      #     mkdir -p "${{ env.PBS_AARCH_HOME }}"
+      #     PBS_ARCHIVE="cpython-${{ env.PBS_VERSION_FULL }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
+      #     gh release download ${{ env.PBS_VERSION }} --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
+      #     tar xf "/tmp/$PBS_ARCHIVE" --directory "${{ env.PBS_AARCH_HOME }}" --strip-components=1
           
   build:
     name: Build ${{ matrix.target }}
