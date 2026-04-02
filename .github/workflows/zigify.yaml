@@ -1,4 +1,4 @@
-name: Testing stuff
+name: Cross-compile Rust
 on:
   push:
     branches:
@@ -9,82 +9,200 @@ defaults:
   run:
     shell: bash
 
+env:
+  CARGO_ZIGBUILD_VERSION: "0.22.1"
+  PROTOC_HOME: "~/.protoc"
+  PROTOC_VERSION: "34.1"
+  # TODO: Stupid name
+  PBS_AARCH_HOME: "/tmp/pbs-linux-aarch64"
+  PBS_VERSION: "20260325"
+  ZIG_HOME: "~/.zig"
+  ZIG_VERSION: "0.15.2"
+
 jobs:
-  do-a-thing:
-    name: Doing a thing
+  setup-deps:
+    name: Setup dependencies
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v6
+      # ================================
+      # zig
+      # ================================
+      - name: Cache Zig
+        id: cache-zig
+        uses: actions/cache@v7
         with:
-          python-version: |-
-            3.14
+          path: ${{ env.ZIG_HOME }}
+          key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
 
-      - name: Grab them deps
+      - name: Setup Zig
+        if: steps.cache-zig.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ${{ env.ZIG_HOME }}
+          ZIG_ARCHIVE="zig-x86_64-linux-${{ env.ZIG_VERSION }}.tar.xz"
+          curl -v -L "https://ziglang.org/download/${{ env.ZIG_VERSION }}/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
+          tar xf "/tmp/$ZIG_ARCHIVE" --directory "${{ env.ZIG_HOME }}" --strip-components=1
+
+      # ================================
+      # cargo-zigbuild
+      # ================================
+      # TODO: This will be under the rust-cache
+      - name: Cache cargo-zigbuild
+        id: cache-cargo-zigbuild
+        uses: actions/cache@v7
+        with:
+          path: ~/.cargo/bin/cargo-zigbuild
+          key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
+
+      - name: Setup cargo-zigbuild
+        if: steps.cache-cargo-zigbuild.outputs.cache-hit != 'true'
+        run: cargo install --locked cargo-zigbuild --version ${{ env.CARGO_ZIGBUILD_VERSION }}
+
+      # ================================
+      # protoc
+      # ================================
+      - name: Cache protoc
+        id: cache-protoc
+        uses: actions/cache@v7
+        with:
+          path: ${{ env.PROTOC_HOME }}
+          key: cache-protoc-${{ runner.os }}-${{ env.PROTOC_VERSION }}
+
+      - name: Setup protoc
+        if: steps.cache-protoc.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo "::notice::PATH=$PATH"
-          echo "::notice::GITHUB_PATH=$GITHUB_PATH"
+          mkdir -p ${{ env.PROTOC_HOME }}
+          PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip"
+          gh release download v${{ env.PROTOC_VERSION }} --repo protocolbuffers/protobuf --pattern $PROTOC_ZIP --dir /tmp/
+          unzip /tmp/$PROTOC_ZIP -d "${{ env.PROTOC_HOME }}"
+
+
+      # ================================
+      # PBS
+      # ================================
+      # TODO: Handle this per-arch?
+      - name: Cache PBS aarch64
+        id: cache-pbs-aarch
+        uses: actions/cache@v7
+        with:
+          path: ${{ env.PBS_AARCH_HOME }}
+          key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
+
+      - name: Setup aarch64 Python
+        if: steps.cache-pbs-aarch.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p ${{ env.PBS_AARCH_HOME }}
+          PBS_ARCHIVE="cpython-${{ env.PBS_VERSION }}-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
+          gh release download ${{ env.PBS_VERSION }} --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
+          tar xf "/tmp/$PBS_ARCHIVE" --directory ${{ env.PBS_AARCH_HOME }} --strip-components=1
+
+      # - name: Try compiling
+      #   env:
+      #     PYO3_CROSS_PYTHON_VERSION: "3.14"
+      #     AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
+      #     RUSTFLAGS: "-L /tmp/python-aarch/lib"
+      #   run: |
+      #     cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
+      #     echo "::notice::$(ls -la)"
+      #     echo "::notice::$(ls -la ./src/rust/target)"
+      #     echo "::notice::$(ls -la ./src/rust/target/release)"
+      #     echo "::notice::$(ls -la ./src/rust/target/aarch64-unknown-linux-gnu)"
           
-          # TODO: Add SHA/size checks
-          # TODO: Move these somewhere easily cacheable
-          
-          rustup target add aarch64-unknown-linux-gnu
-          
-          PROTOC_ZIP="protoc-34.1-linux-x86_64.zip"
-          gh release download v34.1 --repo protocolbuffers/protobuf --pattern $PROTOC_ZIP --dir /tmp/
-          unzip /tmp/$PROTOC_ZIP -d "$HOME/.local/"
-          
-          ZIG_VERSION="zig-x86_64-linux-0.15.2"
-          ZIG_ARCHIVE="$ZIG_VERSION.tar.xz"
-          curl -v -L "https://ziglang.org/download/0.15.2/$ZIG_ARCHIVE" -o "/tmp/$ZIG_ARCHIVE"
-          tar xf "/tmp/$ZIG_ARCHIVE" --directory "$HOME/.local/bin"
-          echo "$HOME/.local/bin/$ZIG_VERSION" >> "$GITHUB_PATH"
-          
-          # TODO: Version this - need at least (0.22.1) for some aws-ls-rc issues
-          # TODO: Use pre-builts?
-          cargo install --locked cargo-zigbuild
-          
-          echo "::notice::PATH=$PATH"
-          echo "::notice::GITHUB_PATH=$GITHUB_PATH"
-          
-          # TODO: There is no zig
-          echo "::notice::zig=$(zig --version)"
-          echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
-          echo "::notice::protoc=$(protoc --version)"
+    build:
+      name: Build ${{ matrix.target }}
+      runs-on: ubuntu-latest
+      needs: setup-deps
+      strategy:
+        matrix:
+          target:
+            - aarch64-unknown-linux-gnu
       
-      - name: Install aarch python deps
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # TODO: Set as output path
-          PY_AARCH_DIR="/tmp/python-aarch"
-          mkdir -p $PY_AARCH_DIR
-          PBS_VERSION="cpython-3.14.3+20260325-aarch64-unknown-linux-gnu-install_only_stripped"
-          PBS_ARCHIVE="$PBS_VERSION.tar.gz"
+      steps:
+        - uses: actions/checkout@v6
 
-          gh release download 20260325 --repo astral-sh/python-build-standalone --pattern $PBS_ARCHIVE --dir /tmp/
-          tar xf "/tmp/$PBS_ARCHIVE" --directory $PY_AARCH_DIR --strip-components=1
-          echo "::notice::AARCH_DIR=$(ls $PY_AARCH_DIR)"
+        # ================================
+        # Restore Caches
+        # ================================
+        - name: Restore Zig
+          uses: actions/cache/restore@v7
+          id: restore-zig
+          with:
+            path: ~/.cargo/bin/cargo-zigbuild
+            key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
 
-      - name: Try compiling
-        env:
-          PYO3_CROSS_PYTHON_VERSION: "3.14"
-          AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
-          RUSTFLAGS: "-L /tmp/python-aarch/lib"
-        run: |
-          cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
-          echo "::notice::$(ls -la)"
-          echo "::notice::$(ls -la ./src/rust/target)"
-          echo "::notice::$(ls -la ./src/rust/target/release)"
+        - name: Check zig
+          if: steps.restore-zig.outputs.cache-hit != 'true'
+          run: exit 1
 
-      # - name: Upload stuff
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: engine
-      #     path: ./src/rust/target/release/*
-      #     retention-days: 1
+        - name: Restore cargo-zigbuild cache
+          uses: actions/cache/restore@v7
+          id: restore-cargo-zigbuild
+          with:
+            path: ~/.cargo/bin/cargo-zigbuild
+            key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
+
+        - name: Check cargo-zigbuild
+          if: steps.restore-cargo-zigbuild.outputs.cache-hit != 'true'
+          run: exit 1
+
+        - name: Restore protoc
+          id: restore-protoc
+          uses: actions/cache/restore@v7
+          with:
+            path: ${{ env.PROTOC_HOME }}
+            key: cache-protoc-${{ runner.os }}-${{ env.PROTOC_VERSION }}
+        
+        - name: Check protoc
+          if: steps.restore-protoc.outputs.cache-hit != 'true'
+          run: exit 1
+
+        # TODO: This is per-arch
+        - name: Restore PBS aarch64
+          id: restore-pbs-aarch
+          uses: actions/cache/restore@v7
+          with:
+            path: ${{ env.PBS_AARCH_HOME }}
+            key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
+      
+        - name: Check pbs
+          if: steps.restore-pbs-aarch.cache-hit != 'true'
+          run: exit 1
+
+        # ================================
+        # Build
+        # ================================
+
+        - name: Setup PATHs
+          run: |
+            echo "${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
+            echo "${{ env.ZIG_HOME }}" >> $GITHUB_PATH
+            echo "${{ env.PYTHON_AARCH_HOME }}/bin" >> $GITHUB_PATH
+
+            echo "::notice::PATH=$PATH"
+            echo "::notice::GITHUB_PATH=$GITHUB_PATH"
+            
+            # TODO: There is no zig
+            echo "::notice::zig=$(zig --version)"
+            echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
+            echo "::notice::protoc=$(protoc --version)"
+
+        - name: Try compiling
+          env:
+            AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
+            PYO3_CROSS_PYTHON_VERSION: "3.14"
+            RUSTFLAGS: "-L ${{ env.PBS_AARCH_HOME }}/lib"
+          run: |
+            echo "::notice::PATH=$PATH"
+
+            # TODO: Should this be part of the central cache?
+            rustup target add ${{ matrix.target }}
+
+            cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target ${{ matrix.target }}
+            echo "::notice::$(ls -la)"
+            echo "::notice::$(ls -la ./src/rust/target)"
+            echo "::notice::$(ls -la ./src/rust/target/release)"
+            echo "::notice::$(ls -la ./src/rust/target/${{ matrix.target }})"
