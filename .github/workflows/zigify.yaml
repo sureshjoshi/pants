@@ -30,7 +30,7 @@ jobs:
       # ================================
       - name: Cache Zig
         id: cache-zig
-        uses: actions/cache@v7
+        uses: actions/cache@v5
         with:
           path: ${{ env.ZIG_HOME }}
           key: cache-zig-${{ runner.os }}-${{ env.ZIG_VERSION }}
@@ -49,7 +49,7 @@ jobs:
       # TODO: This will be under the rust-cache
       - name: Cache cargo-zigbuild
         id: cache-cargo-zigbuild
-        uses: actions/cache@v7
+        uses: actions/cache@v5
         with:
           path: ~/.cargo/bin/cargo-zigbuild
           key: cache-cargo-zigbuild-${{ runner.os }}-${{ env.CARGO_ZIGBUILD_VERSION }}
@@ -63,7 +63,7 @@ jobs:
       # ================================
       - name: Cache protoc
         id: cache-protoc
-        uses: actions/cache@v7
+        uses: actions/cache@v5
         with:
           path: ${{ env.PROTOC_HOME }}
           key: cache-protoc-${{ runner.os }}-${{ env.PROTOC_VERSION }}
@@ -85,7 +85,7 @@ jobs:
       # TODO: Handle this per-arch?
       - name: Cache PBS aarch64
         id: cache-pbs-aarch
-        uses: actions/cache@v7
+        uses: actions/cache@v5
         with:
           path: ${{ env.PBS_AARCH_HOME }}
           key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
@@ -128,7 +128,7 @@ jobs:
       # Restore Caches
       # ================================
       - name: Restore Zig
-        uses: actions/cache/restore@v7
+        uses: actions/cache/restore@v5
         id: restore-zig
         with:
           path: ~/.cargo/bin/cargo-zigbuild
@@ -139,7 +139,7 @@ jobs:
         run: exit 1
 
       - name: Restore cargo-zigbuild cache
-        uses: actions/cache/restore@v7
+        uses: actions/cache/restore@v5
         id: restore-cargo-zigbuild
         with:
           path: ~/.cargo/bin/cargo-zigbuild
@@ -151,7 +151,7 @@ jobs:
 
       - name: Restore protoc
         id: restore-protoc
-        uses: actions/cache/restore@v7
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.PROTOC_HOME }}
           key: cache-protoc-${{ runner.os }}-${{ env.PROTOC_VERSION }}
@@ -163,7 +163,7 @@ jobs:
       # TODO: This is per-arch
       - name: Restore PBS aarch64
         id: restore-pbs-aarch
-        uses: actions/cache/restore@v7
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.PBS_AARCH_HOME }}
           key: cache-pbs-aarch-${{ runner.os }}-${{ env.PYTHON_AARCH_VERSION }}
