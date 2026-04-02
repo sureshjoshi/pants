@@ -1,5 +1,8 @@
 name: Testing stuff
 on:
+  push:
+    branches:
+      - cargo-zig
   workflow_dispatch:
 
 defaults:
@@ -54,6 +57,9 @@ jobs:
           echo "::notice::protoc=$(protoc --version)"
 
       - name: Try compiling
+        env:
+          PYO3_CROSS_PYTHON_VERSION: "3.14"
+          AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
         run: |
           cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
           
