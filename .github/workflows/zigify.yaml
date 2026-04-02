@@ -74,7 +74,7 @@ jobs:
         env:
           PYO3_CROSS_PYTHON_VERSION: "3.14"
           AWS_LC_SYS_NO_JITTER_ENTROPY: "1"
-          RUST_FLAGS: "-L /tmp/python-aarch/lib"
+          RUSTFLAGS: "-L /tmp/python-aarch/lib"
         run: |
           cargo zigbuild --manifest-path ./src/rust/Cargo.toml --release --target aarch64-unknown-linux-gnu
 
