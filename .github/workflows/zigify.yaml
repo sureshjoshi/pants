@@ -22,6 +22,7 @@ jobs:
 
       - name: Grab them deps
         run: |
+          pip install ziglang
           rustup target add aarch64-unknown-linux-gnu
           cargo install --locked cargo-zigbuild
           # Install protoc 
