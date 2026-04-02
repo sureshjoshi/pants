@@ -114,6 +114,7 @@ jobs:
       PBS_PLATFORM_DIR: "/tmp/pbs"
 
     strategy:
+      fail-fast: false
       matrix:
         config: # Redundant today
           - target: aarch64-unknown-linux-gnu
