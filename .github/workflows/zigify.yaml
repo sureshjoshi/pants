@@ -160,6 +160,7 @@ jobs:
 
       - name: Setup PATHs
         run: |
+          set -euo pipefail
           echo "${{ github.workspace }}/${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
           echo "${{ github.workspace }}/${{ env.ZIG_HOME }}" >> $GITHUB_PATH
           echo "${{ env.PYTHON_AARCH_HOME }}/bin" >> $GITHUB_PATH
@@ -169,9 +170,13 @@ jobs:
           echo "::notice::GITHUB_PATH=$GITHUB_PATH"
           
           # TODO: There is no zig
-          echo "::notice::zig=$(zig --version)"
+          # echo "::notice::zig=$(zig --version)"
           echo "::notice::cargo-zig=$(cargo-zigbuild --version)"
           echo "::notice::protoc=$(protoc --version)"
+
+          echo "::notice::1=$(ls -la ${{ github.workspace }})"
+          echo "::notice::2=$(ls -la ${{ github.workspace }}/${{ env.PROTOC_HOME }})"
+          echo "::notice::3=$(ls -la ${{ env.PROTOC_HOME }})"
 
       - name: Try compiling
         env:
