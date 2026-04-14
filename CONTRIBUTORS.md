@@ -337,6 +337,7 @@ Created as part of the release process.
 + Simon Biggs
 + Sion Kang
 + Srikanth Kotagiri
++ Sriram Viswanathan
 + Stefan Sauer
 + Stephan Erb
 + Stephen Hopper
