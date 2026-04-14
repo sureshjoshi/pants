@@ -11,16 +11,26 @@ defaults:
     shell: bash
 
 jobs:
+  org-check:
+    name: Check GitHub Organization
+    if: ${{ github.repository_owner == 'sureshjoshi' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Noop
+        run: "true"
+
   create-dev-pr:
     name: Create a dev release pull request
+    needs: org-check
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
       pull-requests: write
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Required for contributors file
 
       - name: Determine release version
         id: validate-version
