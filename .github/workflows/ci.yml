@@ -73,6 +73,8 @@ jobs:
           #   target: x86_64-pc-windows-msvc
 
     steps:
+      - uses: actions/checkout@v6
+
       # ================================
       # protoc
       # ================================
@@ -118,7 +120,7 @@ jobs:
       # Build
       # ================================
 
-      - uses: actions/checkout@v6
+
 
       - name: Check Formatting
         run: |
