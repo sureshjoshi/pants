@@ -22,7 +22,7 @@ defaults:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_MANIFEST_PATH: "--manifest-path ./src/rust/Cargo.toml"
+  CARGO_MANIFEST_FLAG: "--manifest-path ./src/rust/Cargo.toml"
   PROTOC_HOME: "compilation-tools/protoc"
   PROTOC_VERSION: "34.1"
   # TODO: Organize to only use a single version - since we can't use env in env
@@ -102,17 +102,17 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Check Formatting
-        run: cargo fmt ${{ env.CARGO_MANIFEST_FLAG }} --check --all
+        run: cargo fmt "${{ env.CARGO_MANIFEST_FLAG }}" --check --all
 
       - name: Lint
-        run: cargo clippy ${{ env.CARGO_MANIFEST_FLAG }} --locked --all
+        run: cargo clippy "${{ env.CARGO_MANIFEST_FLAG }}" --locked --all
 
       - name: Unit Tests (TODO - tests, benches, nocapture )
-        run: cargo test ${{ env.CARGO_MANIFEST_FLAG }} --all
+        run: cargo test "${{ env.CARGO_MANIFEST_FLAG }}" --all
 
       - name: Build Native Engine (TODO - Merge extension module into cargo.toml)
         run: |
-          cargo build ${{ env.CARGO_MANIFEST_FLAG }} \
+          cargo build "${{ env.CARGO_MANIFEST_FLAG }}" \
             --release \
             --features=extension-module \
             -p client \
