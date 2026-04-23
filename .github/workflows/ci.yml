@@ -1,0 +1,127 @@
+# Note: In lieu of using non-GitHub `setup-` actions, I've just manually grabbed binaries/zips and cached them here
+# to avoid as many pointless indirections as possible.
+# 
+# TODO: SHA256 check the downloads
+# TODO: Verify attestations of `gh release download`ed files
+# TODO: Expose cache keys as outputs (or ENV vars)
+#
+# A lot of this was grabbed from https://github.com/sureshjoshi/pants/blob/cargo-zig/.github/workflows/release-zigged.yaml
+# and from https://github.com/pantsbuild/scie-pants/blob/main/.github/workflows/ci.yml
+
+name: CI
+
+on:
+  push:
+    branches:
+      - ci-rewrite
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_MANIFEST_PATH: "--manifest-path ./src/rust/Cargo.toml"
+  PROTOC_HOME: "compilation-tools/protoc"
+  PROTOC_VERSION: "34.1"
+  # TODO: Organize to only use a single version - since we can't use env in env
+  #PBS_VERSION: "20260325"
+  #PBS_VERSION_FULL: "3.14.3+20260325"
+  #PYTHON_MAJOR_MINOR: "3.14"
+
+jobs:
+  org-check:
+    name: Check GitHub Organization
+    if: github.repository_owner == 'sureshjoshi'
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Noop
+        run: "true"
+
+  ci:
+    name: (${{ matrix.name }}) CI
+    needs: org-check
+    runs-on: ${{ matrix.os }}
+    env:
+      PY: python3.14
+    strategy:
+      matrix:
+        include:
+          # - os: macos-14
+          #   name: macos-14-arm64
+          #   target: aarch64-apple-darwin
+
+          # - os: ubuntu-22.04
+          #   name: ubuntu-22.04-x64-gnu
+          #   target: x86_64-unknown-linux-gnu
+
+          - os: ubuntu-22.04
+            name: ubuntu-22.04-x64
+            # target: x86_64-unknown-linux-musl
+
+          # - os: ubuntu-22.04-arm
+          #   name: ubuntu-22.04-arm64-gnu
+          #   target: aarch64-unknown-linux-gnu
+
+          # - os: ubuntu-22.04-arm
+          #   name: ubuntu-22.04-arm64
+          #   target: aarch64-unknown-linux-musl
+
+          # - os: windows-2022
+          #   name: windows-2022-x64
+          #   target: x86_64-pc-windows-msvc
+
+    steps:
+      # ================================
+      # protoc
+      # ================================
+      - name: Cache protoc
+        id: cache-protoc
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.PROTOC_HOME }}
+          key: cache-protoc-${{ runner.os }}-${{ runner.arch }}-${{ env.PROTOC_VERSION }}
+
+      - name: Setup protoc
+        if: steps.cache-protoc.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ env.PROTOC_HOME }}"
+          PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-osx-aarch_64.zip"
+
+          gh release download v${{ env.PROTOC_VERSION }} \
+            --repo protocolbuffers/protobuf \
+            --pattern $PROTOC_ZIP \
+            --dir /tmp/
+
+          unzip /tmp/$PROTOC_ZIP -d "${{ env.PROTOC_HOME }}"
+  
+      - uses: actions/checkout@v6
+
+      - name: Check Formatting
+        run: cargo fmt ${CARGO_MANIFEST_FLAG} --check --all
+
+      - name: Lint
+        run: cargo clippy ${CARGO_MANIFEST_FLAG} --locked --all
+
+      - name: Unit Tests (TODO - tests, benches, nocapture )
+        run: cargo test ${CARGO_MANIFEST_FLAG} --all
+
+      - name: Build Native Engine (TODO: Merge extension module into cargo.toml)
+        run: |
+          cargo build ${CARGO_MANIFEST_FLAG} \
+            --release \
+            --features=extension-module \
+            -p client \
+            -p engine \
+            -p sandboxer
+
+      - name: List what we got
+        run: |
+          ls -la src/rust/target/release
+          ls -la src/python/pants
+          ls -la src/python/pants/engine/internals
+          ls -la src/python/pants/bin
