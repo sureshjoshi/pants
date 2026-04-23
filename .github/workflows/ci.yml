@@ -105,11 +105,14 @@ jobs:
 
           # TODO: I was getting a lot of cache grief between ~ and $HOME - and permission denied elsewhere... I hate GHA
           echo "${{ github.workspace }}/${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
+          
 
       - name: Print PATHs
         run: |
           echo "::notice::PATH=$PATH"
           echo "::notice::protoc=$(protoc --version)"
+          echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
+          
 
       # ================================
       # Build
