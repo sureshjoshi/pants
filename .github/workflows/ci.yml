@@ -98,14 +98,32 @@ jobs:
             --dir /tmp/
 
           unzip /tmp/$PROTOC_ZIP -d "${{ env.PROTOC_HOME }}"
-  
+
+      - name: Setup PATHs
+        run: |
+          set -euo pipefail
+
+          # TODO: I was getting a lot of cache grief between ~ and $HOME - and permission denied elsewhere... I hate GHA
+          echo "${{ github.workspace }}/${{ env.PROTOC_HOME }}/bin" >> $GITHUB_PATH
+
+      - name: Print PATHs
+        run: |
+          echo "::notice::PATH=$PATH"
+          echo "::notice::protoc=$(protoc --version)"
+
+      # ================================
+      # Build
+      # ================================
+
       - uses: actions/checkout@v6
 
       - name: Check Formatting
-        run: cargo fmt --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --check --all
+        run: |
+          cargo fmt --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --check --all
 
       - name: Lint
-        run: cargo clippy --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --locked --all
+        run: |
+          cargo clippy --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --locked --all
 
       - name: Unit Tests (TODO - tests, benches, nocapture )
         run: cargo test --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --all
