@@ -126,14 +126,19 @@ jobs:
 
       - name: Lint
         run: |
-          cargo clippy --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --locked --all
+          echo "::notice::PATH=$PATH"
+          echo "::notice::protoc=$(protoc --version)"
+          echo "::notice::protoc=$PROTOC"
+
+          PROTOC=$(which protoc) cargo clippy --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --locked --all
 
       - name: Unit Tests (TODO - tests, benches, nocapture )
-        run: cargo test --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --all
+        run: |
+          PROTOC=$(which protoc) cargo test --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --all
 
       - name: Build Native Engine (TODO - Merge extension module into cargo.toml)
         run: |
-          cargo build \
+          PROTOC=$(which protoc) cargo build \
             --manifest-path ${{ env.CARGO_MANIFEST_PATH }} \
             --release \
             --features=extension-module \
