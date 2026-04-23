@@ -48,16 +48,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-14
-            name: macos-14-arm64
+          # - os: macos-14
+          #   name: macos-14-arm64
           #   target: aarch64-apple-darwin
 
           # - os: ubuntu-22.04
           #   name: ubuntu-22.04-x64-gnu
           #   target: x86_64-unknown-linux-gnu
 
-          # - os: ubuntu-22.04
-          #   name: ubuntu-22.04-x64
+          - os: ubuntu-22.04
+            name: ubuntu-22.04-x64
             # target: x86_64-unknown-linux-musl
 
           # - os: ubuntu-22.04-arm
@@ -92,7 +92,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "${{ env.PROTOC_HOME }}"
-          PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-osx-aarch_64.zip"
+          PROTOC_ZIP="protoc-${{ env.PROTOC_VERSION }}-linux-x86_64.zip"
 
           gh release download v${{ env.PROTOC_VERSION }} \
             --repo protocolbuffers/protobuf \
@@ -114,13 +114,11 @@ jobs:
           echo "::notice::PATH=$PATH"
           echo "::notice::protoc=$(protoc --version)"
           echo "PROTOC=$(which protoc)" >> $GITHUB_ENV
-          
+
 
       # ================================
       # Build
       # ================================
-
-
 
       - name: Check Formatting
         run: |
@@ -131,6 +129,8 @@ jobs:
           echo "::notice::PATH=$PATH"
           echo "::notice::protoc=$(protoc --version)"
           echo "::notice::protoc=$PROTOC"
+
+          sudo apt-get install -y pkg-config fuse libfuse-dev
 
           PROTOC=$(which protoc) cargo clippy --manifest-path ${{ env.CARGO_MANIFEST_PATH }} --locked --all
 
