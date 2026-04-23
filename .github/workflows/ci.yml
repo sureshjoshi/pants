@@ -110,7 +110,7 @@ jobs:
       - name: Unit Tests (TODO - tests, benches, nocapture )
         run: cargo test ${CARGO_MANIFEST_FLAG} --all
 
-      - name: Build Native Engine (TODO: Merge extension module into cargo.toml)
+      - name: Build Native Engine (TODO - Merge extension module into cargo.toml)
         run: |
           cargo build ${CARGO_MANIFEST_FLAG} \
             --release \
