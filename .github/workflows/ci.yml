@@ -102,17 +102,17 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Check Formatting
-        run: cargo fmt ${CARGO_MANIFEST_FLAG} --check --all
+        run: cargo fmt ${{ env.CARGO_MANIFEST_FLAG }} --check --all
 
       - name: Lint
-        run: cargo clippy ${CARGO_MANIFEST_FLAG} --locked --all
+        run: cargo clippy ${{ env.CARGO_MANIFEST_FLAG }} --locked --all
 
       - name: Unit Tests (TODO - tests, benches, nocapture )
-        run: cargo test ${CARGO_MANIFEST_FLAG} --all
+        run: cargo test ${{ env.CARGO_MANIFEST_FLAG }} --all
 
       - name: Build Native Engine (TODO - Merge extension module into cargo.toml)
         run: |
-          cargo build ${CARGO_MANIFEST_FLAG} \
+          cargo build ${{ env.CARGO_MANIFEST_FLAG }} \
             --release \
             --features=extension-module \
             -p client \
