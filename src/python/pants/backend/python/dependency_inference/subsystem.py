@@ -191,31 +191,3 @@ class PythonInferSubsystem(Subsystem):
             """
         ),
     )
-
-    use_rust_parser = BoolOption(
-        default=True,
-        help=softwrap(
-            f"""
-            Use the new Rust-based, multithreaded, in-process dependency parser.
-
-            Pants 2.17 introduced a new paradigm to dependency parsing for Python by leveraging a
-            Rust-based parser that's called in the same process as Pants itself, instead of farming
-            out to one-python-process-per-file.
-
-            As a result of the switch, cold-cache performance improved by a factor of about 12x,
-            while hot-cache had no difference. Additionally, Pants can now infer dependencies from
-            Python scripts with syntax errors.
-
-            After leaving this defaulted to disabled for a release cycle, Pants 2.18 started
-            defaulting to enabling this.
-
-            If you think the new behaviour is causing problems, it is recommended that you run
-            `{bin_name()} peek :: > before.json` and then
-            `{bin_name()} --python-infer-use-rust-parser=False peek :: > after.json` and compare the
-            two results.
-
-            If you think there is a bug and need to disable it, please file an issue:
-            https://github.com/pantsbuild/pants/issues/new/choose.
-            """
-        ),
-    )
