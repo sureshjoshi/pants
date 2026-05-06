@@ -16,6 +16,7 @@ from pants.engine.internals.scheduler import ExecutionError
 from pants.testutil.pants_integration_test import run_pants
 from pants.testutil.rule_runner import QueryRule, RuleRunner
 
+
 @pytest.fixture
 def rule_runner() -> RuleRunner:
     rule_runner = RuleRunner(
@@ -27,6 +28,7 @@ def rule_runner() -> RuleRunner:
         target_types=[DockerImageTarget],
     )
     rule_runner.set_options(
+        args=[],
         env_inherit={"PATH", "PYENV_ROOT", "HOME"},
     )
     return rule_runner
