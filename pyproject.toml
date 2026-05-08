@@ -61,14 +61,14 @@ target-version = "py314"
 
 [tool.ruff.lint]
 select = [
-  "C4", # https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
-  "E", # https://docs.astral.sh/ruff/rules/#error-e
-  "F", # https://docs.astral.sh/ruff/rules/#pyflakes-f
-  "I", # https://docs.astral.sh/ruff/rules/#isort-i
+  "C4",  # https://docs.astral.sh/ruff/rules/#flake8-comprehensions-c4
+  "E",   # https://docs.astral.sh/ruff/rules/#error-e
+  "F",   # https://docs.astral.sh/ruff/rules/#pyflakes-f
+  "I",   # https://docs.astral.sh/ruff/rules/#isort-i
   "ISC", # https://docs.astral.sh/ruff/rules/#flake8-implicit-str-concat-isc
   "RUF", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
-  "UP", # https://docs.astral.sh/ruff/rules/#pyupgrade-up (update Python code to `target-version`)
-  "W", # https://docs.astral.sh/ruff/rules/#warning-w
+  "UP",  # https://docs.astral.sh/ruff/rules/#pyupgrade-up (update Python code to `target-version`)
+  "W",   # https://docs.astral.sh/ruff/rules/#warning-w
   "YTT", # https://docs.astral.sh/ruff/rules/#flake8-2020-ytt
 ]
 external = ["PNT20"]
