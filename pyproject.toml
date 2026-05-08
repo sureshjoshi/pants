@@ -60,16 +60,36 @@ line-length = 100
 target-version = "py314"
 
 [tool.ruff.lint]
-# I: isort (import sorting)
-# UP: pyupgrade (update Python code to `target-version`)
-select = ["I", "UP"]
-# UP006/UP035: replaces DefaultDict with collections.defaultdict - lots of churn (which SJ wants to batch after 3.14)
-# UP007: Many buried, non-auto-fixable unions
-# UP018: Replaces `int(42)` in tests, breaking call-by-type and implicitly
-# UP031: Two string replacements that are not auto-fixable
-# UP036: Outdated version check (in rule_visitor for Python 3.8)
+select = [
+  "I", # https://docs.astral.sh/ruff/rules/#isort-i
+  "UP", # https://docs.astral.sh/ruff/rules/#pyupgrade-up (update Python code to `target-version`)
+  "YTT", # https://docs.astral.sh/ruff/rules/#flake8-2020-ytt
+  "ISC", # https://docs.astral.sh/ruff/rules/#flake8-implicit-str-concat-isc
+]
+
 # UP040/UP046/UP047:  Cost-benefit unclear, see https://github.com/python/cpython/issues/114159
-ignore = ["UP006", "UP007", "UP018", "UP031", "UP035", "UP036", "UP040", "UP046", "UP047"]
+ignore = [
+  # non-pep585-annotation: Use {to} instead of {from} for type annotation. Note: (lots of churn)
+  "UP006",
+  # non-pep604-annotation-union: Use X | Y for type annotations. Note: Many buried, non-auto-fixable unions
+  "UP007",
+  # native-literals: Unnecessary {literal_type} call (rewrite as a literal). Note: Replaces `int(42)` in tests, breaking call-by-type and implicitly
+  "UP018",
+  # printf-string-formatting: Use format specifiers instead of percent format. Note: Two string replacements that are not auto-fixable
+  "UP031",
+  # deprecated-import: Import from {target} instead: {names}. Note: Replaces `DefaultDict` with `collections.defaultdict` (lots of churn).
+  "UP035",
+  # outdated-version-block: Version block is outdated for minimum Python version. Note: Outdated version check (in rule_visitor for Python 3.8)
+  "UP036",
+  # non-pep695-type-alias: Type alias {name} uses {type_alias_method} instead of the type keyword. Note: Cost-benefit unclear, see https://github.com/python/cpython/issues/114159
+  "UP040",
+  # non-pep695-generic-class: Generic class {name} uses Generic subclass instead of type parameters. Note: Cost-benefit unclear, see https://github.com/python/cpython/issues/114159
+  "UP046",
+  # non-pep695-generic-function: Generic function {name} should use type parameters. Note: Cost-benefit unclear, see https://github.com/python/cpython/issues/114159
+  "UP047",
+  # explicit-string-concatenation: Explicitly concatenated string should be implicitly concatenated. TODO: 9 errors that can be auto-fixed.
+  "ISC003", 
+]
 external = ["PNT20"]
 
 [tool.ruff.lint.isort]
