@@ -14,8 +14,6 @@ extend-ignore:
   E741,
   # line break before binary operator  (conflicts with Black)
   W503,
-  # Unnecessary dict call - rewrite as a literal
-  C408
 
 [flake8:local-plugins]
 extension =
